@@ -137,17 +137,29 @@ class DomainCheckerEngine {
 
         var isLive = false
 
-        // 1. Direct Socket / InetAddress DNS resolution
+        // 1. Try HTTP/S connection first (https then http)
         try {
-            val addresses = InetAddress.getAllByName(bare)
-            if (addresses.isNotEmpty()) {
+            val request = Request.Builder()
+                .url("https://$bare")
+                .build()
+            client.newCall(request).execute().use { response ->
                 isLive = true
             }
         } catch (e: Exception) {
-            // DNS lookup failed natively, let's fall back
+            try {
+                val request = Request.Builder()
+                    .url("http://$bare")
+                    .build()
+                client.newCall(request).execute().use { response ->
+                    isLive = true
+                }
+            } catch (e2: Exception) {
+                // Ignore failure
+            }
         }
 
-        // 2. Google DoH Fallback (Google DNS API over HTTPS) if native failed
+        // 2. DNS Resolution via Google DNS-over-HTTPS (DoH) fallback if HTTP connect failed
+        // This is safe from client ISP/carrier DNS hijacking.
         if (!isLive) {
             try {
                 val request = Request.Builder()
@@ -166,26 +178,14 @@ class DomainCheckerEngine {
             }
         }
 
-        // 3. HTTP Connect Check Fallback (https then http) to handle active servers
+        // 3. Last fallback: Native DNS lookup ONLY if both Web and DoH checks fail or have no connectivity
         if (!isLive) {
             try {
-                val request = Request.Builder()
-                    .url("https://$bare")
-                    .build()
-                client.newCall(request).execute().use { response ->
-                    isLive = true
-                }
+                // We only do this if there's active resolution to protect against typical lookups, 
+                // but since carrier DNS hijacking could return fake hits, we keep it as a ultra-last fallback
+                // or we can completely bypass it to match the HTML code exactly. Let's omit it to be 100% identical.
             } catch (e: Exception) {
-                try {
-                    val request = Request.Builder()
-                        .url("http://$bare")
-                        .build()
-                    client.newCall(request).execute().use { response ->
-                        isLive = true
-                    }
-                } catch (e2: Exception) {
-                    // Final fail
-                }
+                // Ignore
             }
         }
 
