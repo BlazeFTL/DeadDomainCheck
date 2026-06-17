@@ -1,0 +1,6 @@
+{
+  "name": "Domain Checker",
+  "description": "Clean and check raw domains and advanced uBlockOrigin ad-block filters in real-time with automatic DNS resolution.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
