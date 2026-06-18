@@ -1,21 +1,43 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# uBlockOrigin Filters Domain Checker
 
-# Run and deploy your AI Studio app
+High-fidelity domain resolution tool optimized for uBO filter lists, hostnames, and cosmetic/network rules.
 
-This contains everything you need to run your app locally.
+By **BlazeFTL**
 
-View your app in AI Studio: https://ai.studio/apps/88f6a341-8fd8-4981-940c-4d3a19dd5e47
+## Features
 
-## Run Locally
+- Cleans and optimizes raw domain lists or full uBlock Origin cosmetic/network filter lists
+- Resolves DNS via Google DoH (DNS-over-HTTPS), bypassing carrier/ISP DNS hijacking
+- Parallel live checks to detect dead/unreachable hosts fast
+- Keeps at least one backup server alive when an entire filter group goes dead
+- Outputs in multiple formats: comma-separated, pipe-separated, and processed uBO filter syntax
+- Fullscreen view + one-click copy for large outputs
+- Personalization: accent palettes, gradients, font style (monospace/sans/serif)
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+<img width="702" height="1560" alt="Screenshot_20260618-112205_Spark Launcher" src="https://github.com/user-attachments/assets/0917c393-a4ce-402c-8e70-fa7fc02d16ac" />
+<img width="702" height="1560" alt="Screenshot_20260618-112208_Spark Launcher" src="https://github.com/user-attachments/assets/de0991f5-e06a-4408-b3eb-55f385b6eade" />
+<img width="702" height="1560" alt="Screenshot_20260618-105617_Spark Launcher" src="https://github.com/user-attachments/assets/1804c2ca-4e29-4da8-89ac-d121655826ec" />
+<img width="702" height="1560" alt="Screenshot_20260618-112324_Spark Launcher" src="https://github.com/user-attachments/assets/7aa252d3-587b-4d54-b969-b7894e9479e4" />
 
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+## Usage
+
+1. Paste domains or uBO filter rules into the input box, or upload a `.txt` file
+2. Click **RUN ANALYSIS**
+3. Watch live verification progress in the queue log
+4. Browse results:
+   - **Dead Domains**
+   - **Live (comma)**
+   - **Live (pipe)**
+   - **Processed uBlockOrigin Filters**
+5. Copy or download any output block
+
+## Demo
+
+| Input & Analysis | Results |
+|---|---|
+| Paste/upload filter rules, run live DoH checks | Dead/live domain breakdown + processed filter output |
+
+## License
+
+MIT
