@@ -16,6 +16,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -102,7 +103,9 @@ fun MainScreen(
 
     // Dialog state
     var showHelpDialog by remember { mutableStateOf(false) }
+    var showSettingsDialog by remember { mutableStateOf(false) }
     var showFullscreenDialog by remember { mutableStateOf(false) }
+    var enableWrapping by remember { mutableStateOf(false) }
     var fullscreenTitle by remember { mutableStateOf("") }
     var fullscreenText by remember { mutableStateOf("") }
 
@@ -176,18 +179,33 @@ fun MainScreen(
                     )
                 }
 
-                // Help Button (Replaces Preset & Guides users)
-                IconButton(
-                    onClick = { showHelpDialog = true },
-                    modifier = Modifier
-                        .size(36.dp)
-                        .align(Alignment.CenterEnd)
+                // Settings & Help Buttons aligned to top right
+                Row(
+                    modifier = Modifier.align(Alignment.CenterEnd),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.HelpOutline,
-                        contentDescription = "Help Guide",
-                        tint = Color(0xFF64748B)
-                    )
+                    IconButton(
+                        onClick = { showSettingsDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Theme & Font Settings",
+                            tint = Color(0xFF64748B)
+                        )
+                    }
+
+                    IconButton(
+                        onClick = { showHelpDialog = true },
+                        modifier = Modifier.size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.HelpOutline,
+                            contentDescription = "Help Guide",
+                            tint = Color(0xFF64748B)
+                        )
+                    }
                 }
             }
         }
@@ -237,155 +255,6 @@ fun MainScreen(
                                 color = primaryAccentColor
                             )
                         )
-                    }
-                }
-            }
-
-            // Theme & Personalization Customizer Card
-            var showPersonalizer by remember { mutableStateOf(false) }
-            Card(
-                colors = CardDefaults.cardColors(containerColor = Color.White),
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
-            ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { showPersonalizer = !showPersonalizer },
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.Palette,
-                                contentDescription = "Palette",
-                                tint = primaryAccentColor,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "Theme & Customization",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color(0xFF1E293B)
-                                    )
-                                )
-                                Text(
-                                    text = "Accent: ${selectedAccent.displayName} | Font: ${selectedFont.displayName}",
-                                    style = MaterialTheme.typography.bodySmall.copy(
-                                        color = Color(0xFF64748B)
-                                    )
-                                )
-                            }
-                        }
-                        Icon(
-                            imageVector = if (showPersonalizer) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                            contentDescription = "Expand Options",
-                            tint = Color(0xFF64748B)
-                        )
-                    }
-
-                    AnimatedVisibility(visible = showPersonalizer) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(top = 14.dp),
-                            verticalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            HorizontalDivider(color = Color(0xFFF1F5F9))
-
-                            // Accent Picker
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    text = "SELECT ACCENT THEME",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color(0xFF475569)
-                                )
-                                
-                                // Row of Accent options
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    MainViewModel.AppAccent.values().forEach { accent ->
-                                        val isSelected = selectedAccent == accent
-                                        Box(
-                                            modifier = Modifier
-                                                .size(36.dp)
-                                                .clip(CircleShape)
-                                                .background(
-                                                    if (accent.gradientBrush != null) accent.gradientBrush else SolidColor(accent.primaryColor)
-                                                )
-                                                .border(
-                                                    width = if (isSelected) 3.dp else 1.dp,
-                                                    color = if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0),
-                                                    shape = CircleShape
-                                                )
-                                                .clickable { viewModel.selectAccent(accent) },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            if (isSelected) {
-                                                Icon(
-                                                    imageVector = Icons.Default.Check,
-                                                    contentDescription = "Selected",
-                                                    tint = Color.White,
-                                                    modifier = Modifier.size(14.dp)
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Font Styles Selection
-                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(
-                                    text = "SELECT BOX FONT STYLE",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = Color(0xFF475569)
-                                )
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    MainViewModel.DisplayFont.values().forEach { font ->
-                                        val isSelected = selectedFont == font
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .clip(RoundedCornerShape(10.dp))
-                                                .background(
-                                                    if (isSelected) primaryAccentColor.copy(alpha = 0.12f) else Color(0xFFF8FAFC)
-                                                )
-                                                .border(
-                                                    width = 1.dp,
-                                                    color = if (isSelected) primaryAccentColor else Color(0xFFE2E8F0),
-                                                    shape = RoundedCornerShape(10.dp)
-                                                )
-                                                .clickable { viewModel.selectFont(font) }
-                                                .padding(horizontal = 10.dp, vertical = 10.dp),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = font.displayName.split(" ").last(),
-                                                fontFamily = font.fontFamily,
-                                                fontSize = 12.sp,
-                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
-                                                color = if (isSelected) secondaryAccentColor else Color(0xFF475569)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
                     }
                 }
             }
@@ -1054,6 +923,190 @@ fun MainScreen(
         )
     }
 
+    // Settings Dialog Implementation
+    if (showSettingsDialog) {
+        Dialog(
+            onDismissRequest = { showSettingsDialog = false }
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .wrapContentHeight()
+                    .clip(RoundedCornerShape(20.dp)),
+                color = Color.White,
+                shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Title Area
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = "Settings",
+                                tint = primaryAccentColor,
+                                modifier = Modifier.size(24.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "App Personalization",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF1E293B)
+                                )
+                            )
+                        }
+
+                        IconButton(
+                            onClick = { showSettingsDialog = false },
+                            modifier = Modifier
+                                .background(Color(0xFFF1F5F9), CircleShape)
+                                .size(30.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close Settings",
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
+
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Accent Theme Picker
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "SELECT ACCENT PALETTE & GRADIENTS",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF475569)
+                        )
+
+                        // Visual preview of current accent name
+                        Text(
+                            text = "Active Palette: ${selectedAccent.displayName}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryAccentColor
+                        )
+
+                        val chunkedAccents = remember { MainViewModel.AppAccent.values().toList().chunked(6) }
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            chunkedAccents.forEach { chunk ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    chunk.forEach { accent ->
+                                        val isSelected = selectedAccent == accent
+                                        Box(
+                                            modifier = Modifier
+                                                .size(38.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (accent.gradientBrush != null) accent.gradientBrush else SolidColor(accent.primaryColor)
+                                                )
+                                                .border(
+                                                    width = if (isSelected) 3.dp else 1.dp,
+                                                    color = if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0),
+                                                    shape = CircleShape
+                                                )
+                                                .clickable { viewModel.selectAccent(accent) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Selected",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(16.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    // Font Selection
+                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Text(
+                            text = "SELECT DISPLAY TEXT STYLE",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = Color(0xFF475569)
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            MainViewModel.DisplayFont.values().forEach { font ->
+                                val isSelected = selectedFont == font
+                                Box(
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(
+                                            if (isSelected) primaryAccentColor.copy(alpha = 0.12f) else Color(0xFFF8FAFC)
+                                        )
+                                        .border(
+                                            width = 1.6.dp,
+                                            color = if (isSelected) primaryAccentColor else Color(0xFFE2E8F0),
+                                            shape = RoundedCornerShape(12.dp)
+                                        )
+                                        .clickable { viewModel.selectFont(font) }
+                                        .padding(horizontal = 8.dp, vertical = 12.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = font.displayName.split(" ").last(),
+                                        fontFamily = font.fontFamily,
+                                        fontSize = 12.sp,
+                                        fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                        color = if (isSelected) secondaryAccentColor else Color(0xFF475569)
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                    // Dialog Actions
+                    Button(
+                        onClick = { showSettingsDialog = false },
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = primaryAccentColor,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(46.dp)
+                    ) {
+                        Text("Apply Settings", fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+    }
+
     // Fullscreen View Dialog Implementation (Magnificent 95% width, 90% height modal with line numbers!)
     if (showFullscreenDialog) {
         Dialog(
@@ -1126,45 +1179,95 @@ fun MainScreen(
                             .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
                             .padding(14.dp)
                     ) {
-                        val innerScrollState = rememberScrollState()
-                        val horizontalScrollState = rememberScrollState()
-                        val lines = fullscreenText.split("\n")
-                        Row(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(innerScrollState)
-                        ) {
-                            // Line numbers column
-                            Text(
-                                text = (1..lines.size).joinToString("\n") { it.toString().padStart(3, ' ') },
-                                fontFamily = selectedFont.fontFamily,
-                                fontSize = 12.sp,
-                                color = Color(0xFF94A3B8),
-                                lineHeight = 20.sp,
-                                modifier = Modifier.padding(end = 12.dp)
-                            )
+                        if (enableWrapping) {
+                            val lines = remember(fullscreenText) { fullscreenText.split("\n") }
+                            LazyColumn(
+                                modifier = Modifier.fillMaxSize()
+                            ) {
+                                itemsIndexed(lines) { index, lineText ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 1.dp),
+                                        verticalAlignment = Alignment.Top
+                                    ) {
+                                        // Line number (fixed width, perfect styling)
+                                        Text(
+                                            text = (index + 1).toString().padStart(3, ' '),
+                                            fontFamily = selectedFont.fontFamily,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF94A3B8),
+                                            lineHeight = 18.sp,
+                                            modifier = Modifier.width(30.dp),
+                                            textAlign = TextAlign.End
+                                        )
 
-                            // Vertical divider
-                            Box(
+                                        Spacer(modifier = Modifier.width(8.dp))
+
+                                        // Subtle vertical guideline
+                                        Box(
+                                            modifier = Modifier
+                                                .width(1.dp)
+                                                .height(18.dp)
+                                                .background(Color(0xFFE2E8F0))
+                                        )
+
+                                        Spacer(modifier = Modifier.width(10.dp))
+
+                                        // Wrapping actual text line
+                                        Text(
+                                            text = lineText,
+                                            fontFamily = selectedFont.fontFamily,
+                                            fontSize = 11.sp,
+                                            color = Color(0xFF1E293B),
+                                            lineHeight = 18.sp,
+                                            softWrap = true,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            val innerScrollState = rememberScrollState()
+                            val horizontalScrollState = rememberScrollState()
+                            val lines = fullscreenText.split("\n")
+                            Row(
                                 modifier = Modifier
-                                    .fillMaxHeight()
-                                    .width(1.dp)
-                                    .background(Color(0xFFE2E8F0))
-                            )
+                                    .fillMaxSize()
+                                    .verticalScroll(innerScrollState)
+                            ) {
+                                // Line numbers column
+                                Text(
+                                    text = (1..lines.size).joinToString("\n") { it.toString().padStart(3, ' ') },
+                                    fontFamily = selectedFont.fontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF94A3B8),
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier.padding(end = 12.dp)
+                                )
 
-                            Spacer(modifier = Modifier.width(12.dp))
+                                // Vertical divider
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .width(1.dp)
+                                        .background(Color(0xFFE2E8F0))
+                                )
 
-                            // Actual text content (with horizontal scrolling overflow to prevent line wrapping desync)
-                            Text(
-                                text = fullscreenText,
-                                fontFamily = selectedFont.fontFamily,
-                                fontSize = 12.sp,
-                                color = Color(0xFF1E293B),
-                                lineHeight = 20.sp,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .horizontalScroll(horizontalScrollState)
-                            )
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                // Actual text content (with horizontal scrolling overflow to prevent line wrapping desync)
+                                Text(
+                                    text = fullscreenText,
+                                    fontFamily = selectedFont.fontFamily,
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF1E293B),
+                                    lineHeight = 20.sp,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .horizontalScroll(horizontalScrollState)
+                                )
+                            }
                         }
                     }
 
@@ -1173,39 +1276,62 @@ fun MainScreen(
                     // Action buttons at the bottom
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.End,
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Copy Button with Solid Border outline
+                        // Word Wrap Toggle Button (High-end modern toggle)
                         OutlinedButton(
-                            onClick = {
-                                clipboardManager.setText(AnnotatedString(fullscreenText))
-                                Toast.makeText(context, "Copied list content!", Toast.LENGTH_SHORT).show()
-                            },
+                            onClick = { enableWrapping = !enableWrapping },
                             shape = RoundedCornerShape(10.dp),
-                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
-                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1E293B)),
+                            border = BorderStroke(1.dp, if (enableWrapping) primaryAccentColor else Color(0xFFCBD5E1)),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                containerColor = if (enableWrapping) primaryAccentColor.copy(alpha = 0.08f) else Color.Transparent,
+                                contentColor = if (enableWrapping) secondaryAccentColor else Color(0xFF475569)
+                            ),
                             modifier = Modifier.height(44.dp)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ContentCopy,
-                                contentDescription = "Copy Icon",
+                                imageVector = if (enableWrapping) Icons.Default.WrapText else Icons.Default.Title,
+                                contentDescription = "Toggle text wrapping",
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Copy Content", fontWeight = FontWeight.Bold)
+                            Text(if (enableWrapping) "Wrapping: ON" else "Wrapping: OFF", fontWeight = FontWeight.Bold)
                         }
 
-                        Spacer(modifier = Modifier.width(12.dp))
-
-                        // Clear solid Close button
-                        Button(
-                            onClick = { showFullscreenDialog = false },
-                            shape = RoundedCornerShape(10.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
-                            modifier = Modifier.height(44.dp)
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Close View", fontWeight = FontWeight.Bold)
+                            // Copy Button with Solid Border outline
+                            OutlinedButton(
+                                onClick = {
+                                    clipboardManager.setText(AnnotatedString(fullscreenText))
+                                    Toast.makeText(context, "Copied list content!", Toast.LENGTH_SHORT).show()
+                                },
+                                shape = RoundedCornerShape(10.dp),
+                                border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1E293B)),
+                                modifier = Modifier.height(44.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.ContentCopy,
+                                    contentDescription = "Copy Icon",
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text("Copy Content", fontWeight = FontWeight.Bold)
+                            }
+
+                            // Clear solid Close button
+                            Button(
+                                onClick = { showFullscreenDialog = false },
+                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                                modifier = Modifier.height(44.dp)
+                            ) {
+                                Text("Close View", fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }

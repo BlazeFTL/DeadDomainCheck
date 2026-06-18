@@ -45,6 +45,18 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         ),
         TWILIGHT("Twilight Sunset", Color(0xFF8B5CF6), Color(0xFFF43F5E), Color(0xFFF5F3FF),
             Brush.linearGradient(listOf(Color(0xFF8B5CF6), Color(0xFFF43F5E)))
+        ),
+        AURORA("Aurora Veil", Color(0xFF0D9488), Color(0xFF4F46E5), Color(0xFFF0FDF4),
+            Brush.linearGradient(listOf(Color(0xFF0D9488), Color(0xFF4F46E5)))
+        ),
+        SUNSET("Neon Sunset", Color(0xFFF97316), Color(0xFFD946EF), Color(0xFFFFF7ED),
+            Brush.linearGradient(listOf(Color(0xFFF97316), Color(0xFFD946EF)))
+        ),
+        FOREST("Forest Dew", Color(0xFF84CC16), Color(0xFF06B6D4), Color(0xFFF7FEE7),
+            Brush.linearGradient(listOf(Color(0xFF84CC16), Color(0xFF06B6D4)))
+        ),
+        COSMIC("Cosmic Mist", Color(0xFF2563EB), Color(0xFF7C3AED), Color(0xFFEFF6FF),
+            Brush.linearGradient(listOf(Color(0xFF2563EB), Color(0xFF7C3AED)))
         )
     }
 
