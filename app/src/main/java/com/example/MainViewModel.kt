@@ -3,6 +3,9 @@ package com.example
 import android.app.Application
 import android.content.Context
 import android.net.Uri
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontFamily
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -23,6 +26,47 @@ sealed class AnalysisState {
 }
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
+
+    // Aesthetic and Custom Personalization Enums
+    enum class AppAccent(
+        val displayName: String,
+        val primaryColor: Color,
+        val secondaryColor: Color,
+        val labelBgColor: Color,
+        val gradientBrush: Brush? = null
+    ) {
+        EMERALD("Emerald Shield", Color(0xFF10B981), Color(0xFF047857), Color(0xFFECFDF5)),
+        OCEAN("Ocean Wave", Color(0xFF0EA5E9), Color(0xFF0284C7), Color(0xFFF0F9FF)),
+        AMETHYST("Amethyst Spark", Color(0xFF8B5CF6), Color(0xFF6D28D9), Color(0xFFF5F3FF)),
+        CRIMSON("Crimson Rose", Color(0xFFF43F5E), Color(0xFFBE123C), Color(0xFFFFF1F2)),
+        VOLCANO("Blaze Sunrise", Color(0xFFF97316), Color(0xFFC2410C), Color(0xFFFFF7ED)),
+        CYBERPUNK("Cyberpunk Dream", Color(0xFFEC4899), Color(0xFF3B82F6), Color(0xFFFFF1F2),
+            Brush.linearGradient(listOf(Color(0xFFEC4899), Color(0xFF3B82F6)))
+        ),
+        TWILIGHT("Twilight Sunset", Color(0xFF8B5CF6), Color(0xFFF43F5E), Color(0xFFF5F3FF),
+            Brush.linearGradient(listOf(Color(0xFF8B5CF6), Color(0xFFF43F5E)))
+        )
+    }
+
+    enum class DisplayFont(val displayName: String, val fontFamily: FontFamily) {
+        MONOSPACE("Developer Monospace", FontFamily.Monospace),
+        SANS_SERIF("Clean Sans-Serif", FontFamily.SansSerif),
+        SERIF("Readable Serif", FontFamily.Serif)
+    }
+
+    private val _selectedAccent = MutableStateFlow(AppAccent.EMERALD)
+    val selectedAccent: StateFlow<AppAccent> = _selectedAccent.asStateFlow()
+
+    private val _selectedFont = MutableStateFlow(DisplayFont.MONOSPACE)
+    val selectedFont: StateFlow<DisplayFont> = _selectedFont.asStateFlow()
+
+    fun selectAccent(accent: AppAccent) {
+        _selectedAccent.value = accent
+    }
+
+    fun selectFont(font: DisplayFont) {
+        _selectedFont.value = font
+    }
 
     private val engine = DomainCheckerEngine()
     private val client = OkHttpClient()

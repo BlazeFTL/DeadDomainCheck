@@ -20,6 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
@@ -90,6 +92,14 @@ fun MainScreen(
     val isSorted by viewModel.isSorted.collectAsState()
     val isUboFilter by viewModel.isUboFilter.collectAsState()
 
+    // Personalization preference states
+    val selectedAccent by viewModel.selectedAccent.collectAsState()
+    val selectedFont by viewModel.selectedFont.collectAsState()
+
+    val primaryAccentColor = selectedAccent.primaryColor
+    val secondaryAccentColor = selectedAccent.secondaryColor
+    val labelBgColor = selectedAccent.labelBgColor
+
     // Dialog state
     var showHelpDialog by remember { mutableStateOf(false) }
     var showFullscreenDialog by remember { mutableStateOf(false) }
@@ -102,6 +112,23 @@ fun MainScreen(
     ) { uri ->
         if (uri != null) {
             viewModel.loadFromUri(context, uri)
+        }
+    }
+
+    // File Exporter for saving resolved filters text to device storage
+    val createTextFileLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/plain")
+    ) { uri ->
+        if (uri != null) {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { outputStream ->
+                    outputStream.write(processedFilter.toByteArray())
+                    outputStream.flush()
+                }
+                Toast.makeText(context, "Saved uBlockOrigin filters successfully!", Toast.LENGTH_LONG).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Save failed: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+            }
         }
     }
 
@@ -133,7 +160,7 @@ fun MainScreen(
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Success Verification",
-                        tint = Color(0xFF10B981),
+                        tint = primaryAccentColor,
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -173,15 +200,15 @@ fun MainScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Feature Description Hero Card (Soft Emerald Green container)
+            // Feature Description Hero Card (Aesthetic Dynamic Accent container)
             Card(
                 colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFFECFDF5)
+                    containerColor = labelBgColor
                 ),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, Color(0xFFA7F3D0).copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+                    .border(1.dp, primaryAccentColor.copy(alpha = 0.3f), RoundedCornerShape(12.dp))
             ) {
                 Row(
                     modifier = Modifier
@@ -192,7 +219,7 @@ fun MainScreen(
                     Icon(
                         imageVector = Icons.Default.Dns,
                         contentDescription = "Engine Icon",
-                        tint = Color(0xFF047857),
+                        tint = secondaryAccentColor,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(10.dp))
@@ -201,15 +228,164 @@ fun MainScreen(
                             text = "Domain Verification Engine",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Color(0xFF065F46)
+                                color = secondaryAccentColor
                             )
                         )
                         Text(
                             text = "Quad-Layer Logic: DNS + Wildcard Trap + HTTP/S Fetch",
                             style = MaterialTheme.typography.bodySmall.copy(
-                                color = Color(0xFF047857)
+                                color = primaryAccentColor
                             )
                         )
+                    }
+                }
+            }
+
+            // Theme & Personalization Customizer Card
+            var showPersonalizer by remember { mutableStateOf(false) }
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(16.dp))
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { showPersonalizer = !showPersonalizer },
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = "Palette",
+                                tint = primaryAccentColor,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = "Theme & Customization",
+                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color(0xFF1E293B)
+                                    )
+                                )
+                                Text(
+                                    text = "Accent: ${selectedAccent.displayName} | Font: ${selectedFont.displayName}",
+                                    style = MaterialTheme.typography.bodySmall.copy(
+                                        color = Color(0xFF64748B)
+                                    )
+                                )
+                            }
+                        }
+                        Icon(
+                            imageVector = if (showPersonalizer) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Expand Options",
+                            tint = Color(0xFF64748B)
+                        )
+                    }
+
+                    AnimatedVisibility(visible = showPersonalizer) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 14.dp),
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            HorizontalDivider(color = Color(0xFFF1F5F9))
+
+                            // Accent Picker
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "SELECT ACCENT THEME",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF475569)
+                                )
+                                
+                                // Row of Accent options
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    MainViewModel.AppAccent.values().forEach { accent ->
+                                        val isSelected = selectedAccent == accent
+                                        Box(
+                                            modifier = Modifier
+                                                .size(36.dp)
+                                                .clip(CircleShape)
+                                                .background(
+                                                    if (accent.gradientBrush != null) accent.gradientBrush else SolidColor(accent.primaryColor)
+                                                )
+                                                .border(
+                                                    width = if (isSelected) 3.dp else 1.dp,
+                                                    color = if (isSelected) Color(0xFF0F172A) else Color(0xFFE2E8F0),
+                                                    shape = CircleShape
+                                                )
+                                                .clickable { viewModel.selectAccent(accent) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (isSelected) {
+                                                Icon(
+                                                    imageVector = Icons.Default.Check,
+                                                    contentDescription = "Selected",
+                                                    tint = Color.White,
+                                                    modifier = Modifier.size(14.dp)
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Font Styles Selection
+                            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(
+                                    text = "SELECT BOX FONT STYLE",
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF475569)
+                                )
+
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    MainViewModel.DisplayFont.values().forEach { font ->
+                                        val isSelected = selectedFont == font
+                                        Box(
+                                            modifier = Modifier
+                                                .weight(1f)
+                                                .clip(RoundedCornerShape(10.dp))
+                                                .background(
+                                                    if (isSelected) primaryAccentColor.copy(alpha = 0.12f) else Color(0xFFF8FAFC)
+                                                )
+                                                .border(
+                                                    width = 1.dp,
+                                                    color = if (isSelected) primaryAccentColor else Color(0xFFE2E8F0),
+                                                    shape = RoundedCornerShape(10.dp)
+                                                )
+                                                .clickable { viewModel.selectFont(font) }
+                                                .padding(horizontal = 10.dp, vertical = 10.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Text(
+                                                text = font.displayName.split(" ").last(),
+                                                fontFamily = font.fontFamily,
+                                                fontSize = 12.sp,
+                                                fontWeight = if (isSelected) FontWeight.ExtraBold else FontWeight.Medium,
+                                                color = if (isSelected) secondaryAccentColor else Color(0xFF475569)
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -238,36 +414,58 @@ fun MainScreen(
                             )
                         )
                         
-                        // Status Token Badge
-                        Box(
-                            modifier = Modifier
-                                .background(
-                                    color = when (inputLabel) {
-                                        "READY" -> Color(0xFFF1F5F9)
-                                        "FETCHING...", "ANALYZING...", "LOADING..." -> Color(0xFFFEF3C7)
-                                        "LOADED" -> Color(0xFFECFDF5)
-                                        "DONE" -> Color(0xFFD1FAE5)
-                                        "HTTP ERROR", "FETCH FAILED", "OPEN FILE ERROR" -> Color(0xFFFEE2E2)
-                                        else -> Color(0xFFF1F5F9)
-                                    },
-                                    shape = RoundedCornerShape(8.dp)
-                                )
-                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(
-                                text = inputLabel,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    color = when (inputLabel) {
-                                        "READY" -> Color(0xFF475569)
-                                        "FETCHING...", "ANALYZING...", "LOADING..." -> Color(0xFFB45309)
-                                        "LOADED" -> Color(0xFF047857)
-                                        "DONE" -> Color(0xFF065F46)
-                                        "HTTP ERROR", "FETCH FAILED", "OPEN FILE ERROR" -> Color(0xFFB91C1C)
-                                        else -> Color(0xFF475569)
-                                    }
+                            // Status Token Badge
+                            Box(
+                                modifier = Modifier
+                                    .background(
+                                        color = when (inputLabel) {
+                                            "READY" -> Color(0xFFF1F5F9)
+                                            "FETCHING...", "ANALYZING...", "LOADING..." -> Color(0xFFFEF3C7)
+                                            "LOADED" -> Color(0xFFECFDF5)
+                                            "DONE" -> Color(0xFFD1FAE5)
+                                            "HTTP ERROR", "FETCH FAILED", "OPEN FILE ERROR" -> Color(0xFFFEE2E2)
+                                            else -> Color(0xFFF1F5F9)
+                                        },
+                                        shape = RoundedCornerShape(8.dp)
+                                    )
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = inputLabel,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = when (inputLabel) {
+                                            "READY" -> Color(0xFF475569)
+                                            "FETCHING...", "ANALYZING...", "LOADING..." -> Color(0xFFB45309)
+                                            "LOADED" -> Color(0xFF047857)
+                                            "DONE" -> Color(0xFF065F46)
+                                            "HTTP ERROR", "FETCH FAILED", "OPEN FILE ERROR" -> Color(0xFFB91C1C)
+                                            else -> Color(0xFF475569)
+                                        }
+                                    )
                                 )
-                            )
+                            }
+
+                            // Fullscreen icon button for input text
+                            IconButton(
+                                onClick = {
+                                    fullscreenTitle = "INPUT CONTENT"
+                                    fullscreenText = inputText
+                                    showFullscreenDialog = true
+                                },
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.OpenInFull,
+                                    contentDescription = "Expand Input Content",
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
                         }
                     }
 
@@ -297,7 +495,7 @@ fun MainScreen(
                         ),
                         singleLine = false,
                         textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            fontFamily = FontFamily.Monospace,
+                            fontFamily = selectedFont.fontFamily,
                             fontSize = 12.sp
                         )
                     )
@@ -370,7 +568,7 @@ fun MainScreen(
                             .height(50.dp),
                         shape = RoundedCornerShape(10.dp),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF22C55E), // Vibrant Green
+                            containerColor = primaryAccentColor,
                             contentColor = Color.White,
                             disabledContainerColor = Color(0xFFE2E8F0),
                             disabledContentColor = Color(0xFF94A3B8)
@@ -650,7 +848,8 @@ fun MainScreen(
                         onCopy = {
                             clipboardManager.setText(AnnotatedString(deadToShow.joinToString("\n")))
                             Toast.makeText(context, "Copied Dead list to Clipboard!", Toast.LENGTH_SHORT).show()
-                        }
+                        },
+                        fontFamily = selectedFont.fontFamily
                     )
                 }
 
@@ -677,7 +876,8 @@ fun MainScreen(
                         onCopy = {
                             clipboardManager.setText(AnnotatedString(skippedToShow.joinToString("\n")))
                             Toast.makeText(context, "Copied Skipped list successfully!", Toast.LENGTH_SHORT).show()
-                        }
+                        },
+                        fontFamily = selectedFont.fontFamily
                     )
                 }
 
@@ -703,7 +903,8 @@ fun MainScreen(
                     onCopy = {
                         clipboardManager.setText(AnnotatedString(if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(",")))
                         Toast.makeText(context, "Copied Live Comma list!", Toast.LENGTH_SHORT).show()
-                    }
+                    },
+                    fontFamily = selectedFont.fontFamily
                 )
 
                 // 4. Live Pipe List Card
@@ -728,13 +929,14 @@ fun MainScreen(
                     onCopy = {
                         clipboardManager.setText(AnnotatedString(if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|")))
                         Toast.makeText(context, "Copied Live Pipe list!", Toast.LENGTH_SHORT).show()
-                    }
+                    },
+                    fontFamily = selectedFont.fontFamily
                 )
 
                 // 5. Processed filters card
                 if (isUboFilter) {
                     ResultCard(
-                        title = "PROCESSED UBO CLEANSED FILTER",
+                        title = "PROCESSED uBlockOrigin FILTERS",
                         badgeText = null,
                         accentColor = Color(0xFF10B981), // Emerald Green
                         icon = {
@@ -747,14 +949,18 @@ fun MainScreen(
                         },
                         content = processedFilter,
                         onFullscreen = {
-                            fullscreenTitle = "PROCESSED UBO CLEANSED FILTER"
+                            fullscreenTitle = "PROCESSED uBlockOrigin FILTERS"
                             fullscreenText = processedFilter
                             showFullscreenDialog = true
                         },
                         onCopy = {
                             clipboardManager.setText(AnnotatedString(processedFilter))
                             Toast.makeText(context, "Copied Processed filter rules!", Toast.LENGTH_SHORT).show()
-                        }
+                        },
+                        onDownload = {
+                            createTextFileLauncher.launch("ublock_filters.txt")
+                        },
+                        fontFamily = selectedFont.fontFamily
                     )
                 }
             }
@@ -789,9 +995,11 @@ fun MainScreen(
                 ) {
                     Text(
                         text = "By BlazeFTL",
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.ExtraBold,
                         color = Color(0xFF10B981),
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Text(
@@ -919,12 +1127,17 @@ fun MainScreen(
                             .padding(14.dp)
                     ) {
                         val innerScrollState = rememberScrollState()
+                        val horizontalScrollState = rememberScrollState()
                         val lines = fullscreenText.split("\n")
-                        Row(modifier = Modifier.fillMaxSize()) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(innerScrollState)
+                        ) {
                             // Line numbers column
                             Text(
                                 text = (1..lines.size).joinToString("\n") { it.toString().padStart(3, ' ') },
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = selectedFont.fontFamily,
                                 fontSize = 12.sp,
                                 color = Color(0xFF94A3B8),
                                 lineHeight = 20.sp,
@@ -941,16 +1154,16 @@ fun MainScreen(
 
                             Spacer(modifier = Modifier.width(12.dp))
 
-                            // Actual text content
+                            // Actual text content (with horizontal scrolling overflow to prevent line wrapping desync)
                             Text(
                                 text = fullscreenText,
-                                fontFamily = FontFamily.Monospace,
+                                fontFamily = selectedFont.fontFamily,
                                 fontSize = 12.sp,
                                 color = Color(0xFF1E293B),
                                 lineHeight = 20.sp,
                                 modifier = Modifier
                                     .weight(1f)
-                                    .verticalScroll(innerScrollState)
+                                    .horizontalScroll(horizontalScrollState)
                             )
                         }
                     }
@@ -1013,7 +1226,9 @@ fun ResultCard(
     content: String,
     onFullscreen: () -> Unit,
     onCopy: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onDownload: (() -> Unit)? = null,
+    fontFamily: FontFamily = FontFamily.Monospace
 ) {
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -1081,6 +1296,20 @@ fun ResultCard(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        if (onDownload != null) {
+                            IconButton(
+                                onClick = onDownload,
+                                modifier = Modifier.size(36.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Download,
+                                    contentDescription = "Download Content",
+                                    tint = Color(0xFF64748B),
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
                         IconButton(
                             onClick = onFullscreen,
                             modifier = Modifier.size(36.dp)
@@ -1109,7 +1338,7 @@ fun ResultCard(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Beautiful scrolling inner monospace text area
+                // Beautiful scrolling inner customizable text area
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1121,7 +1350,7 @@ fun ResultCard(
                     val innerScrollState = rememberScrollState()
                     Text(
                         text = content.ifEmpty { "Empty list" },
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = fontFamily,
                         fontSize = 11.sp,
                         color = Color(0xFF334155),
                         lineHeight = 16.sp,
