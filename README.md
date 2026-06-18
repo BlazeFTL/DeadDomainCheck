@@ -1,4 +1,4 @@
-# uBlockOrigin Filters Domain Checker
+# Domain Checker
 
 High-fidelity domain resolution tool optimized for uBO filter lists, hostnames, and cosmetic/network rules.
 
