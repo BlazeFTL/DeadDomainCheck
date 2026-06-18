@@ -38,6 +38,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -117,31 +119,31 @@ fun MainScreen(
             shadowElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = 14.dp, horizontal = 16.dp)
             ) {
-                // Header Title with Checked Icon
+                // Centered portion
                 Row(
+                    modifier = Modifier.align(Alignment.Center),
                     verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
+                    horizontalArrangement = Arrangement.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.CheckCircle,
                         contentDescription = "Success Verification",
                         tint = Color(0xFF10B981),
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(22.dp)
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "uBlockOrigin Filters Domain Checker",
                         style = MaterialTheme.typography.titleMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFF1E293B)
                         ),
+                        textAlign = TextAlign.Center,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -150,7 +152,9 @@ fun MainScreen(
                 // Help Button (Replaces Preset & Guides users)
                 IconButton(
                     onClick = { showHelpDialog = true },
-                    modifier = Modifier.size(36.dp)
+                    modifier = Modifier
+                        .size(36.dp)
+                        .align(Alignment.CenterEnd)
                 ) {
                     Icon(
                         imageVector = Icons.Default.HelpOutline,
@@ -623,393 +627,135 @@ fun MainScreen(
                 val deadToShow = if (isSorted) currentDeadPool.sorted() else currentDeadPool
                 val skippedToShow = if (isSorted) currentSkippedPool.sorted() else currentSkippedPool
 
-                // 1. Dead Domains Result Card (RED BORDER AND SOFT BACKGROUND)
+                // 1. Dead Domains Result Card
                 if (deadToShow.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, Color(0xFFFCA5A5), RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF2F2))
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Cancel, // Red clean cancel mark
-                                        contentDescription = "Dead icon",
-                                        tint = Color(0xFFDC2626),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "DEAD DOMAINS (${deadToShow.size})",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFFDC2626)
-                                    )
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    // Fullscreen Action Button
-                                    IconButton(
-                                        onClick = {
-                                            fullscreenTitle = "DEAD DOMAINS (${deadToShow.size})"
-                                            fullscreenText = deadToShow.joinToString("\n")
-                                            showFullscreenDialog = true
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.OpenInFull,
-                                            contentDescription = "Expand Fullscreen",
-                                            tint = Color(0xFFDC2626),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
-                                    
-                                    // Copy Action Button
-                                    TextButton(
-                                        onClick = {
-                                            clipboardManager.setText(AnnotatedString(deadToShow.joinToString("\n")))
-                                            Toast.makeText(context, "Copied Dead list to Clipboard!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text("COPY", color = Color(0xFFDC2626), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = deadToShow.joinToString("\n"),
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                                color = Color(0xFF991B1B),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 120.dp)
-                                    .verticalScroll(rememberScrollState())
-                                    .background(Color.White, RoundedCornerShape(8.dp))
-                                    .border(1.dp, Color(0xFFFEE2E2), RoundedCornerShape(8.dp))
-                                    .padding(8.dp)
+                    ResultCard(
+                        title = "DEAD DOMAINS",
+                        badgeText = "${deadToShow.size}",
+                        accentColor = Color(0xFFEF4444), // Crimson Red
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Cancel,
+                                contentDescription = "Dead Icon",
+                                tint = Color(0xFFEF4444),
+                                modifier = Modifier.size(18.dp)
                             )
+                        },
+                        content = deadToShow.joinToString("\n"),
+                        onFullscreen = {
+                            fullscreenTitle = "DEAD DOMAINS (${deadToShow.size})"
+                            fullscreenText = deadToShow.joinToString("\n")
+                            showFullscreenDialog = true
+                        },
+                        onCopy = {
+                            clipboardManager.setText(AnnotatedString(deadToShow.joinToString("\n")))
+                            Toast.makeText(context, "Copied Dead list to Clipboard!", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    )
                 }
 
-                // 2. Skipped Wildcards Card (AMBER BORDER AND SOFT BACKGROUND)
+                // 2. Skipped Wildcards Card
                 if (skippedToShow.isNotEmpty()) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, Color(0xFFFDE68A), RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFFBEB))
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.SkipNext,
-                                        contentDescription = "Skipped Icon",
-                                        tint = Color(0xFFD97706),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "SKIPPED WILDCARDS (${skippedToShow.size})",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFFD97706)
-                                    )
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    // Fullscreen action
-                                    IconButton(
-                                        onClick = {
-                                            fullscreenTitle = "SKIPPED WILDCARDS (${skippedToShow.size})"
-                                            fullscreenText = skippedToShow.joinToString("\n")
-                                            showFullscreenDialog = true
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.OpenInFull,
-                                            contentDescription = "Expand Fullscreen",
-                                            tint = Color(0xFFD97706),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
-
-                                    // Copy action
-                                    TextButton(
-                                        onClick = {
-                                            clipboardManager.setText(AnnotatedString(skippedToShow.joinToString("\n")))
-                                            Toast.makeText(context, "Copied Skipped list successfully!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text("COPY", color = Color(0xFFD97706), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = skippedToShow.joinToString("\n"),
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                                color = Color(0xFF92400E),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 100.dp)
-                                    .verticalScroll(rememberScrollState())
-                                    .background(Color.White, RoundedCornerShape(8.dp))
-                                    .border(1.dp, Color(0xFFFEF3C7), RoundedCornerShape(8.dp))
-                                    .padding(8.dp)
+                    ResultCard(
+                        title = "SKIPPED WILDCARDS",
+                        badgeText = "${skippedToShow.size}",
+                        accentColor = Color(0xFFF59E0B), // Vibrant Amber
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.SkipNext,
+                                contentDescription = "Skipped Icon",
+                                tint = Color(0xFFF59E0B),
+                                modifier = Modifier.size(18.dp)
                             )
+                        },
+                        content = skippedToShow.joinToString("\n"),
+                        onFullscreen = {
+                            fullscreenTitle = "SKIPPED WILDCARDS (${skippedToShow.size})"
+                            fullscreenText = skippedToShow.joinToString("\n")
+                            showFullscreenDialog = true
+                        },
+                        onCopy = {
+                            clipboardManager.setText(AnnotatedString(skippedToShow.joinToString("\n")))
+                            Toast.makeText(context, "Copied Skipped list successfully!", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    )
                 }
 
-                // 3. Live Comma List Card (SKY BLUE BORDER AND SOFT BACKGROUND)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFFBAE6FD), RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0F9FF))
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "LIVE (COMMA)", 
-                                fontSize = 11.sp, 
-                                fontWeight = FontWeight.ExtraBold, 
-                                color = Color(0xFF0284C7)
-                            )
-                            
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                val textValue = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(",")
-                                
-                                // Fullscreen action
-                                IconButton(
-                                    onClick = {
-                                        fullscreenTitle = "LIVE (COMMA)"
-                                        fullscreenText = textValue
-                                        showFullscreenDialog = true
-                                    },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.OpenInFull,
-                                        contentDescription = "Expand Fullscreen",
-                                        tint = Color(0xFF0284C7),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-
-                                // Copy action
-                                TextButton(
-                                    onClick = {
-                                        clipboardManager.setText(AnnotatedString(textValue))
-                                        Toast.makeText(context, "Copied Live Comma list!", Toast.LENGTH_SHORT).show()
-                                    },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                ) {
-                                    Text("COPY", color = Color(0xFF0284C7), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        val formattedCommaText = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(",")
-                        Text(
-                            text = formattedCommaText,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            color = Color(0xFF0369A1),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 100.dp)
-                                .verticalScroll(rememberScrollState())
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFE0F2FE), RoundedCornerShape(8.dp))
-                                .padding(8.dp)
+                // 3. Live Comma List Card
+                ResultCard(
+                    title = "LIVE (COMMA)",
+                    badgeText = "${liveToShow.size}",
+                    accentColor = Color(0xFF3B82F6), // Premium Blue
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Live Icon",
+                            tint = Color(0xFF3B82F6),
+                            modifier = Modifier.size(18.dp)
                         )
+                    },
+                    content = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(","),
+                    onFullscreen = {
+                        fullscreenTitle = "LIVE (COMMA)"
+                        fullscreenText = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(",")
+                        showFullscreenDialog = true
+                    },
+                    onCopy = {
+                        clipboardManager.setText(AnnotatedString(if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString(",")))
+                        Toast.makeText(context, "Copied Live Comma list!", Toast.LENGTH_SHORT).show()
                     }
-                }
+                )
 
-                // 4. Live Pipe List Card (VIOLET/PURPLE BORDER AND SOFT BACKGROUND)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, Color(0xFFDDD6FE), RoundedCornerShape(16.dp)),
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF5F3FF))
-                ) {
-                    Column(modifier = Modifier.padding(14.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                "LIVE (PIPE)", 
-                                fontSize = 11.sp, 
-                                fontWeight = FontWeight.ExtraBold, 
-                                color = Color(0xFF7C3AED)
-                            )
-                            
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                val textValue = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|")
-                                
-                                // Fullscreen action
-                                IconButton(
-                                    onClick = {
-                                        fullscreenTitle = "LIVE (PIPE)"
-                                        fullscreenText = textValue
-                                        showFullscreenDialog = true
-                                    },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.OpenInFull,
-                                        contentDescription = "Expand Fullscreen",
-                                        tint = Color(0xFF7C3AED),
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-
-                                // Copy action
-                                TextButton(
-                                    onClick = {
-                                        clipboardManager.setText(AnnotatedString(textValue))
-                                        Toast.makeText(context, "Copied Live Pipe list!", Toast.LENGTH_SHORT).show()
-                                    },
-                                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                ) {
-                                    Text("COPY", color = Color(0xFF7C3AED), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        val formattedPipeText = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|")
-                        Text(
-                            text = formattedPipeText,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 11.sp,
-                            color = Color(0xFF6D28D9),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(max = 100.dp)
-                                .verticalScroll(rememberScrollState())
-                                .background(Color.White, RoundedCornerShape(8.dp))
-                                .border(1.dp, Color(0xFFEDE9FE), RoundedCornerShape(8.dp))
-                                .padding(8.dp)
+                // 4. Live Pipe List Card
+                ResultCard(
+                    title = "LIVE (PIPE)",
+                    badgeText = "${liveToShow.size}",
+                    accentColor = Color(0xFF8B5CF6), // Royal Purple
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Live Icon",
+                            tint = Color(0xFF8B5CF6),
+                            modifier = Modifier.size(18.dp)
                         )
+                    },
+                    content = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|"),
+                    onFullscreen = {
+                        fullscreenTitle = "LIVE (PIPE)"
+                        fullscreenText = if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|")
+                        showFullscreenDialog = true
+                    },
+                    onCopy = {
+                        clipboardManager.setText(AnnotatedString(if (liveToShow.isEmpty()) "Empty" else liveToShow.joinToString("|")))
+                        Toast.makeText(context, "Copied Live Pipe list!", Toast.LENGTH_SHORT).show()
                     }
-                }
+                )
 
-                // 5. Processed filters card - only shown optionally if detected uBO format (MINT EMERALD GREEN CARD)
+                // 5. Processed filters card
                 if (isUboFilter) {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .border(1.dp, Color(0xFFA7F3D0), RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5))
-                    ) {
-                        Column(modifier = Modifier.padding(14.dp)) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Brush,
-                                        contentDescription = "Shield Clean",
-                                        tint = Color(0xFF047857),
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(6.dp))
-                                    Text(
-                                        text = "PROCESSED UBO CLEANSED FILTER",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.ExtraBold,
-                                        color = Color(0xFF047857)
-                                    )
-                                }
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    // Fullscreen action
-                                    IconButton(
-                                        onClick = {
-                                            fullscreenTitle = "PROCESSED UBO CLEANSED FILTER"
-                                            fullscreenText = processedFilter
-                                            showFullscreenDialog = true
-                                        },
-                                        modifier = Modifier.size(24.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.OpenInFull,
-                                            contentDescription = "Expand Fullscreen",
-                                            tint = Color(0xFF047857),
-                                            modifier = Modifier.size(14.dp)
-                                        )
-                                    }
-
-                                    // Copy action
-                                    TextButton(
-                                        onClick = {
-                                            clipboardManager.setText(AnnotatedString(processedFilter))
-                                            Toast.makeText(context, "Copied Processed filter rules!", Toast.LENGTH_SHORT).show()
-                                        },
-                                        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 2.dp)
-                                    ) {
-                                        Text("COPY", color = Color(0xFF047857), fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(6.dp))
-
-                            Text(
-                                text = processedFilter,
-                                fontFamily = FontFamily.Monospace,
-                                fontSize = 11.sp,
-                                color = Color(0xFF065F46),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 140.dp)
-                                    .verticalScroll(rememberScrollState())
-                                    .background(Color.White, RoundedCornerShape(8.dp))
-                                    .border(1.dp, Color(0xFFD1FAE5), RoundedCornerShape(8.dp))
-                                    .padding(8.dp)
+                    ResultCard(
+                        title = "PROCESSED UBO CLEANSED FILTER",
+                        badgeText = null,
+                        accentColor = Color(0xFF10B981), // Emerald Green
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Default.Brush,
+                                contentDescription = "Brush Icon",
+                                tint = Color(0xFF10B981),
+                                modifier = Modifier.size(18.dp)
                             )
+                        },
+                        content = processedFilter,
+                        onFullscreen = {
+                            fullscreenTitle = "PROCESSED UBO CLEANSED FILTER"
+                            fullscreenText = processedFilter
+                            showFullscreenDialog = true
+                        },
+                        onCopy = {
+                            clipboardManager.setText(AnnotatedString(processedFilter))
+                            Toast.makeText(context, "Copied Processed filter rules!", Toast.LENGTH_SHORT).show()
                         }
-                    }
+                    )
                 }
             }
         }
@@ -1041,6 +787,13 @@ fun MainScreen(
                         .padding(vertical = 4.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    Text(
+                        text = "By BlazeFTL",
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF10B981),
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
                     Text(
                         text = "This utility performs high-fidelity domain resolution, optimized specifically for lists, uBO hosts, and cosmetic/network filters.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -1093,65 +846,291 @@ fun MainScreen(
         )
     }
 
-    // Fullscreen View Dialog Implementation
+    // Fullscreen View Dialog Implementation (Magnificent 95% width, 90% height modal with line numbers!)
     if (showFullscreenDialog) {
-        AlertDialog(
+        Dialog(
             onDismissRequest = { showFullscreenDialog = false },
-            title = {
-                Text(
-                    text = fullscreenTitle,
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-            },
-            text = {
-                Column(modifier = Modifier.fillMaxWidth()) {
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth(0.95f)
+                    .fillMaxHeight(0.9f)
+                    .clip(RoundedCornerShape(24.dp)),
+                color = Color.White,
+                shadowElevation = 8.dp
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
+                ) {
+                    // Header Area of Fullscreen Dialog
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = fullscreenTitle,
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = Color(0xFF1E293B)
+                                )
+                            )
+                            Text(
+                                text = "Detailed analysis list output",
+                                style = MaterialTheme.typography.bodySmall.copy(
+                                    color = Color(0xFF64748B)
+                                )
+                            )
+                        }
+
+                        // Circular Close Button at top-right
+                        IconButton(
+                            onClick = { showFullscreenDialog = false },
+                            modifier = Modifier
+                                .background(Color(0xFFF1F5F9), CircleShape)
+                                .size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Close Fullscreen",
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    HorizontalDivider(color = Color(0xFFE2E8F0))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Large Spacious Monospace Viewer Content Area
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f, fill = false)
-                            .heightIn(max = 420.dp)
-                            .background(Color(0xFFF8FAFC), RoundedCornerShape(8.dp))
-                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
-                            .padding(12.dp)
+                            .weight(1f)
+                            .background(Color(0xFFF8FAFC), RoundedCornerShape(12.dp))
+                            .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(12.dp))
+                            .padding(14.dp)
                     ) {
                         val innerScrollState = rememberScrollState()
-                        Text(
-                            text = fullscreenText,
-                            fontFamily = FontFamily.Monospace,
-                            fontSize = 12.sp,
-                            color = Color(0xFF1E293B),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .verticalScroll(innerScrollState)
-                        )
-                    }
-                }
-            },
-            confirmButton = {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.End,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TextButton(
-                        onClick = {
-                            clipboardManager.setText(AnnotatedString(fullscreenText))
-                            Toast.makeText(context, "Copied content to clipboard!", Toast.LENGTH_SHORT).show()
+                        val lines = fullscreenText.split("\n")
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            // Line numbers column
+                            Text(
+                                text = (1..lines.size).joinToString("\n") { it.toString().padStart(3, ' ') },
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                                color = Color(0xFF94A3B8),
+                                lineHeight = 20.sp,
+                                modifier = Modifier.padding(end = 12.dp)
+                            )
+
+                            // Vertical divider
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .width(1.dp)
+                                    .background(Color(0xFFE2E8F0))
+                            )
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            // Actual text content
+                            Text(
+                                text = fullscreenText,
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 12.sp,
+                                color = Color(0xFF1E293B),
+                                lineHeight = 20.sp,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .verticalScroll(innerScrollState)
+                            )
                         }
-                    ) {
-                        Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copy")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("COPY ALL")
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { showFullscreenDialog = false },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Action buttons at the bottom
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("CLOSE")
+                        // Copy Button with Solid Border outline
+                        OutlinedButton(
+                            onClick = {
+                                clipboardManager.setText(AnnotatedString(fullscreenText))
+                                Toast.makeText(context, "Copied list content!", Toast.LENGTH_SHORT).show()
+                            },
+                            shape = RoundedCornerShape(10.dp),
+                            border = BorderStroke(1.dp, Color(0xFFCBD5E1)),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1E293B)),
+                            modifier = Modifier.height(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Icon",
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Copy Content", fontWeight = FontWeight.Bold)
+                        }
+
+                        Spacer(modifier = Modifier.width(12.dp))
+
+                        // Clear solid Close button
+                        Button(
+                            onClick = { showFullscreenDialog = false },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F172A)),
+                            modifier = Modifier.height(44.dp)
+                        ) {
+                            Text("Close View", fontWeight = FontWeight.Bold)
+                        }
                     }
                 }
             }
-        )
+        }
+    }
+}
+
+// ==========================================
+// REUSABLE HIGH-FIDELITY RESULT CARD COMPOSABLE
+// ==========================================
+@Composable
+fun ResultCard(
+    title: String,
+    badgeText: String?,
+    accentColor: Color,
+    icon: @Composable () -> Unit,
+    content: String,
+    onFullscreen: () -> Unit,
+    onCopy: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+        ) {
+            // Elegant Left vertical accent strip
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(6.dp)
+                    .background(accentColor)
+            )
+
+            // Content Column
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(16.dp)
+            ) {
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        icon()
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleSmall.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                color = Color(0xFF1E293B),
+                                letterSpacing = 0.5.sp
+                            )
+                        )
+                        if (badgeText != null) {
+                            Box(
+                                modifier = Modifier
+                                    .background(accentColor.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = badgeText,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.ExtraBold,
+                                        color = accentColor
+                                    )
+                                )
+                            }
+                        }
+                    }
+
+                    // Flawlessly Aligned Utility Action Icons (Exact 36dp sizes)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        IconButton(
+                            onClick = onFullscreen,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.OpenInFull,
+                                contentDescription = "Fullscreen",
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+
+                        IconButton(
+                            onClick = onCopy,
+                            modifier = Modifier.size(36.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.ContentCopy,
+                                contentDescription = "Copy Content",
+                                tint = Color(0xFF64748B),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Beautiful scrolling inner monospace text area
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(max = 130.dp)
+                        .background(Color(0xFFF8FAFC), RoundedCornerShape(10.dp))
+                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(10.dp))
+                        .padding(10.dp)
+                ) {
+                    val innerScrollState = rememberScrollState()
+                    Text(
+                        text = content.ifEmpty { "Empty list" },
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp,
+                        color = Color(0xFF334155),
+                        lineHeight = 16.sp,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(innerScrollState)
+                    )
+                }
+            }
+        }
     }
 }
